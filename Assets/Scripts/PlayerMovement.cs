@@ -2,41 +2,45 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [SerializeField] private Transform playerHead;
 
-
-    private Rigidbody _rb;
-    private PlayerInput _playerInput;
-    private Vector2 _moveDir;
-
-
+    private Rigidbody rb;
+    private Vector3 startMoveDir;
 
     private void Awake()
     {
-        _rb = GetComponent<Rigidbody>();
-
-        _playerInput = new PlayerInput();
-        _playerInput.Enable();
-        _playerInput.KeyBoard.Jump.performed += Jump;
-        _playerInput.KeyBoard.Movement.performed += _ => _moveDir = _.ReadValue<Vector2>();
+        rb = GetComponent<Rigidbody>();
     }
 
-    private void Jump(InputAction.CallbackContext context)
+    private void Update()
     {
-        _rb.AddForce(Vector3.up * 10, ForceMode.Impulse);
-    }
-
-    private void FixedUpdate()
-    {
-        Movement();
 
     }
 
-    private void Movement()
+    public void Jump()
     {
-        _rb.velocity = new Vector3(_moveDir.x, _rb.velocity.y, _moveDir.y);
+        rb.AddForce(Vector3.up * 5, ForceMode.Impulse);
+    }
+
+    public void Movement(Vector2 moveDir)
+    {
+        Vector3 camForward = playerHead.forward;
+        Vector3 camRight = playerHead.right;
+        camForward.y = 0;
+        camRight.y = 0;
+        camForward.Normalize();
+        camRight.Normalize();
+
+        // 입력에 따라 이동 방향 계산
+        Vector3 MoveDir = camForward * moveDir.y + camRight * moveDir.x;
+
+        MoveDir = Vector3.Lerp(startMoveDir, MoveDir, Time.deltaTime * 5);
+
+        rb.velocity = new Vector3(MoveDir.x * 2, rb.velocity.y, MoveDir.z * 2);
+
+        startMoveDir = MoveDir;
     }
 }
